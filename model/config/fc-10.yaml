@@ -1,0 +1,5 @@
+name: fc
+kwargs:
+  Hn: 10
+  input_dim: 2
+  output_dim: 2

@@ -1,0 +1,8 @@
+# Toy2d
+## logs and figures in ./logs/<exp-name>/
+## For producing visualizations similar to Fig. 2
+python train_toy2d.py model/config/fc-10.yaml opt/config/toy-base.yaml --ce
+
+#
+
+
