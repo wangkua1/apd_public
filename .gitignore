@@ -2,7 +2,7 @@ doc/*.aux
 doc/*.bbl
 doc/*.blg
 doc/*.log
-
+/data/*
 *.png
 *.ipynb
 gan_exps/

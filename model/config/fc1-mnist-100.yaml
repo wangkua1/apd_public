@@ -1,0 +1,4 @@
+name: fc1
+kwargs:
+  Hn: 100
+  input_dim: 784

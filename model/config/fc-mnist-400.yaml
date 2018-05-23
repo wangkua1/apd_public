@@ -1,0 +1,4 @@
+name: fc
+kwargs:
+  Hn: 400
+  input_dim: 784
