@@ -48,11 +48,29 @@ MNIST fcNN2 (784-400-400-10)
 
 **SGD**
 
-**MC-Dropout (p=0.5**
+```
+python train_new.py model/config/fc-mnist-400.yaml opt/config/sgd-mnist.yaml mnist-50000 --cuda
+```
+
+**MC-Dropout (p=0.5)**
+
+```
+python train_new.py model/config/fc-mnist-400-drop-50.yaml opt/config/sgd-mnist.yaml mnist-50000 --cuda --mc_dropout_passes 200
+```
 
 **SGLD**
 
+```
+python train_new.py model/config/fc-mnist-400.yaml opt/config/sgld-mnist-1-1.yaml mnist-50000 --cuda
+```
+
+
 **APD**
+
+```
+python gan.py CE.fc-mnist-400-X-sgld-mnist-1-X-mnist-50000@2017-12-12 opt/gan-config/gan1.yaml
+```
+
 
 
 
