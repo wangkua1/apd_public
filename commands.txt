@@ -1,11 +1,14 @@
 # Toy2d
 ## logs and figures in ./logs/<exp-name>/
 ## For producing visualizations similar to Fig. 2
+### the 1st command runs/saves SGLD samples
+### the 2nd command trains a WGAN-GP on the saved samples
 python train_toy2d.py model/config/fc-10.yaml opt/config/toy-base.yaml --ce
+python 
 
 # For MNIST Classification/Anomaly Detection
 python train_new.py model/config/fc1-mnist-100.yaml opt/config/sgld-mnist-1-1.yaml mnist-50000 --cuda --mc_dropout_passes 100
 
-**side note: please install tensorflow without gpu to use tensorboard monitor
+**side note: please install tensorflow without gpu to use tensorboard monitor with pytorch
 
 

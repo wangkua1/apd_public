@@ -238,7 +238,7 @@ if not arguments['--db']:
 
             model.model.load_state_dict(curr_state)
         ## checkpoint
-        if idx>0 and idx%10000==0:
+        if idx>0 and idx%100==0:
             name = './saves/%s/model_%i.t7'%(exp_name,idx)
             print ("[Saving to]")
             print (name)
