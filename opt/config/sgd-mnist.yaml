@@ -1,0 +1,29 @@
+
+batch_size: 100
+
+name: 'optim.SGD'
+kwargs:
+  lr: .05
+  momentum: 0.0
+  weight_decay: 0.001
+
+
+
+max_train_iters: 200000
+
+ood_scale: 1
+# ood_scale: 5
+n_anom: 2000
+
+sample_size: 100
+sample_interval: 20
+burnin_iters: 500
+validation_interval: 5000  # Show intermediate results less often -- faster training
+variance_monitor_interval: 50
+
+num_test_runs: 10
+num_test_samples: 200
+
+ood_datasets: ['notMNIST', 'omniglot', 'cifar10bw', 'gaussian', 'uniform']
+ood_acq_funcs: ['f_maxy']
+test_ood_scales: [1, 5, 10]

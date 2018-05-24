@@ -1,0 +1,5 @@
+name: fc1
+kwargs:
+  Hn: 100
+  input_dim: 784
+  dropout_rate: 0.5
