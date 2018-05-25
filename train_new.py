@@ -517,9 +517,10 @@ def main(arguments):
                     if posterior_accuracy:
                         print("It: {:5d} | Acc: {:.4f} | Point Acc: {:.4f} | Posterior Acc: {:.4f}".format(iteration, accuracy, point_accuracy, posterior_accuracy))
                         print("It: {:5d} | Loss: {:.4f} | Point Loss: {:.4f} | Posterior Loss: {:.4f}".format(iteration, training_loss.data[0], point_loss, posterior_loss))
+                        sys.stdout.flush()
                     else:
                         print("It: {:5d} | Acc: {:.4f} | Point Acc: {:.4f}".format(iteration, accuracy, point_accuracy))
-
+                        sys.stdout.flush()
 
                     ##################
                     ### MC-Dropout ###
@@ -530,6 +531,7 @@ def main(arguments):
                         monitor.record_matplot(test_mc_loss, iteration,     'mcdrop_loss')
                         print("MC-Dropout Val Accuracy: {:.4f}".format(test_mc_accuracy))
                         print("MC-Dropout Val Loss: {:.4f}".format(test_mc_loss))
+                        sys.stdout.flush()
 
 
 
@@ -557,7 +559,7 @@ def main(arguments):
                         gmodel = utils.cuda(gmodel, arguments)
                         ## get the samples
                         gmodel.posterior_samples = obj_traingan.get_samples(sample_size)
-                        gmodel.posterior_weights = [1 for _ in xrange(len(gmodel.posterior_samples))]
+                        gmodel.posterior_weights = [1 for _ in range(len(gmodel.posterior_samples))]
 
                         ## copied from above, TODO: loop
                         point_accuracy, point_loss, posterior_accuracy, posterior_loss = evaluate(gmodel, valloader,  posterior_flag, Loss, opt_config)
@@ -652,7 +654,7 @@ def main(arguments):
                         gmodel = utils.cuda(gmodel, arguments)
                         ## get the samples
                         gmodel.posterior_samples = obj_traingan.get_samples(sample_size)
-                        gmodel.posterior_weights = [1 for _ in xrange(len(gmodel.posterior_samples))]
+                        gmodel.posterior_weights = [1 for _ in range(len(gmodel.posterior_samples))]
 
                         ## copied from above, TODO: loop
                         for ood_dataset_name in opt_config['ood_datasets']:
@@ -757,7 +759,7 @@ def main(arguments):
         for i in range(num_test_runs):
             print("Test run {}".format(i))
             posterior_samples = utils.load_posterior_state_dicts(src_dir=exp_name, example_model=model, num_samples=num_samples)
-            posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+            posterior_weights = [1 for _ in range(len(posterior_samples))]
             model.posterior_samples = posterior_samples  # Should change this structure
             model.posterior_weights = posterior_weights
             point_accuracy, point_loss, posterior_accuracy, posterior_loss = evaluate(model, testloader,posterior_flag, Loss, opt_config)
@@ -862,7 +864,7 @@ def main(arguments):
 
                     for i in range(num_test_runs):
                         posterior_samples = utils.load_posterior_state_dicts(src_dir=exp_name, example_model=model, num_samples=num_samples)
-                        posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+                        posterior_weights = [1 for _ in range(len(posterior_samples))]
                         model.posterior_samples = posterior_samples  # Should change this structure
                         model.posterior_weights = posterior_weights
 
