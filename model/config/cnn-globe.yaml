@@ -1,0 +1,4 @@
+name: cnn_globe
+kwargs:
+  Hn: .5
+  input_dim: [1,28,28]

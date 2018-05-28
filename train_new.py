@@ -1,20 +1,20 @@
 
 """train_new.py
 Usage:
-    train_new.py <f_model_config> <f_opt_config> <dataset> [--dont-save] [--db] [--cuda] [--test] [--mc_dropout_passes=<passes>] [--amc_gan=<gan_config>] [--amc=<amc_config>] [--prefix=<p>]
+    train_new.py <f_model_config> <f_opt_config> <dataset> [--dont-save] [--db] [--cuda] [--test] [--mc_dropout_passes=<passes>] [--apd_gan=<gan_config>] [--apd=<apd_config>] [--prefix=<p>]
     train_new.py <f_model_config> <f_opt_config> <dataset> [--dont-save] [--db] [--cuda] [--test] [--mc_dropout_passes=<passes>] [--prefix=<p>]
     train_new.py -r <exp_name> <idx> [--test]
 
 Options:
     --mc_dropout_passes=<passes> The number of MC dropout passes to perform at test time. If 0, don't use MC dropout. [default: 0].
     --prefix=<p> Prefix for experiment name [default:]
-    --amc=<gan_config> if using online AMC (e.g. opt/gan-config/babymnist-dcgan.yaml) [default:]
+    --apd=<gan_config> if using online apd (e.g. opt/gan-config/babymnist-dcgan.yaml) [default:]
 
 Arguments:
 
 Example:
     Jan05,2018
-    python train_new.py model/config/fc1-100.yaml opt/config/sgld-baby.yaml babymnist-1000 --cuda --amc_gan opt/gan-config/babymnist-wgan-gp.yaml --amc opt/amc-config/vanilla_amc.yaml
+    python train_new.py model/config/fc1-100.yaml opt/config/sgld-baby.yaml babymnist-1000 --cuda --apd_gan opt/gan-config/babymnist-wgan-gp.yaml --apd opt/apd-config/vanilla_apd.yaml
     python train_new.py model/config/fc1-mnist-100.yaml opt/config/sgld-mnist-1.yaml mnist-50000 --cuda
 
     python train_new.py model/config/cnn-globe.yaml opt/config/sgld-mnist-1.yaml mnist-50000 --cuda
@@ -339,15 +339,15 @@ def main(arguments):
     model, optimizer, Loss, exp_name, model_config, opt_config = load_configuration(arguments, name_task)
     models = [model]
     #####
-    #AMC#
+    #apd#
     #####
-    if arguments['--amc']:
-        if not arguments['--amc_gan']:
+    if arguments['--apd']:
+        if not arguments['--apd_gan']:
             raise Exception("specify a gan config")
         ####
         #### GAN CONFIG
         ####
-        gan_config = gan_utils.opt_load_configuration(arguments['--amc_gan'], None)
+        gan_config = gan_utils.opt_load_configuration(arguments['--apd_gan'], None)
         ### compute OUTPUT_DIM
         posterior_sampling(1, model, 1)
         gan_config['output_dim'] = _flatten_npyfy(model.posterior_samples).shape[1]
@@ -361,16 +361,16 @@ def main(arguments):
         gan_inp_buffer = []
         gan_iter = 0
         ####
-        #### AMC CONFIG
+        #### apd CONFIG
         ####
-        amc_config = yaml.load(open(arguments['--amc'], 'rb'))
+        apd_config = yaml.load(open(arguments['--apd'], 'rb'))
         ## if any of the following is 0, make it =gan_bs
-        amc_config['amc_buffer_size'] = amc_config['amc_buffer_size'] or gan_bs
-        amc_config['T_sgld'] = amc_config['T_sgld'] or gan_bs
-        amc_config['N_chains'] = amc_config['N_chains'] or gan_bs
-        if amc_config['N_chains'] > 1:
+        apd_config['apd_buffer_size'] = apd_config['apd_buffer_size'] or gan_bs
+        apd_config['T_sgld'] = apd_config['T_sgld'] or gan_bs
+        apd_config['N_chains'] = apd_config['N_chains'] or gan_bs
+        if apd_config['N_chains'] > 1:
             opts = [optimizer]
-            for _ in range(amc_config['N_chains'] - 1):
+            for _ in range(apd_config['N_chains'] - 1):
                 ### TODO: play with model init...
                 model = eval(model_config['name'])(**model_config['kwargs'])
                 model = utils.cuda(model, arguments)
@@ -382,7 +382,7 @@ def main(arguments):
 
 
     #####
-    #AMC-
+    #apd-
     #####
 
     if arguments['--test']:
@@ -434,11 +434,11 @@ def main(arguments):
 
     # Monitors
     monitor = Monitor()
-    for k in ['train_loss', 'point_loss',   'bayesian_loss',    'AMC_loss' ,'mcdrop_loss',
-              'train_acc',  'point_acc',    'bayesian_acc',     'AMC_acc' , 'mcdrop_acc',
-                            'point_auroc',  'bayesian_auroc',   'AMC_auroc','mcdrop_auroc',
-                            'point_aupr+',  'bayesian_aupr+',   'AMC_aupr+','mcdrop_aupr+',
-                            'point_aupr-',  'bayesian_aupr-',   'AMC_aupr-','mcdrop_aupr-',
+    for k in ['train_loss', 'point_loss',   'bayesian_loss',    'apd_loss' ,'mcdrop_loss',
+              'train_acc',  'point_acc',    'bayesian_acc',     'apd_acc' , 'mcdrop_acc',
+                            'point_auroc',  'bayesian_auroc',   'apd_auroc','mcdrop_auroc',
+                            'point_aupr+',  'bayesian_aupr+',   'apd_aupr+','mcdrop_aupr+',
+                            'point_aupr-',  'bayesian_aupr-',   'apd_aupr-','mcdrop_aupr-',
                             'bbald_auroc','bbald_aupr+','bbald_aupr-',
                             'abald_auroc','abald_aupr+','abald_aupr-']: monitor.dict_of_traces[k] = []
 
@@ -517,9 +517,10 @@ def main(arguments):
                     if posterior_accuracy:
                         print("It: {:5d} | Acc: {:.4f} | Point Acc: {:.4f} | Posterior Acc: {:.4f}".format(iteration, accuracy, point_accuracy, posterior_accuracy))
                         print("It: {:5d} | Loss: {:.4f} | Point Loss: {:.4f} | Posterior Loss: {:.4f}".format(iteration, training_loss.data[0], point_loss, posterior_loss))
+                        sys.stdout.flush()
                     else:
                         print("It: {:5d} | Acc: {:.4f} | Point Acc: {:.4f}".format(iteration, accuracy, point_accuracy))
-
+                        sys.stdout.flush()
 
                     ##################
                     ### MC-Dropout ###
@@ -530,6 +531,7 @@ def main(arguments):
                         monitor.record_matplot(test_mc_loss, iteration,     'mcdrop_loss')
                         print("MC-Dropout Val Accuracy: {:.4f}".format(test_mc_accuracy))
                         print("MC-Dropout Val Loss: {:.4f}".format(test_mc_loss))
+                        sys.stdout.flush()
 
 
 
@@ -548,16 +550,16 @@ def main(arguments):
                         torch.save(model.state_dict(), os.path.join('saves', exp_name, 'best_point_model.th'))
 
                     ####################
-                    ### AMC Evaluate ###
+                    ### apd Evaluate ###
                     ####################
-                    if arguments['--amc']:
+                    if arguments['--apd']:
                         ## create a new model instance to hold GAN samples
                         ## Model
                         gmodel = eval(model_config['name'])(**model_config['kwargs'])
                         gmodel = utils.cuda(gmodel, arguments)
                         ## get the samples
                         gmodel.posterior_samples = obj_traingan.get_samples(sample_size)
-                        gmodel.posterior_weights = [1 for _ in xrange(len(gmodel.posterior_samples))]
+                        gmodel.posterior_weights = [1 for _ in range(len(gmodel.posterior_samples))]
 
                         ## copied from above, TODO: loop
                         point_accuracy, point_loss, posterior_accuracy, posterior_loss = evaluate(gmodel, valloader,  posterior_flag, Loss, opt_config)
@@ -566,8 +568,8 @@ def main(arguments):
                         # monitor.record_matplot(point_loss, iteration, 'point_loss')
 
                         if posterior_accuracy:
-                            monitor.record_matplot(posterior_accuracy,  gan_iter,   'AMC_acc')
-                            monitor.record_matplot(posterior_loss,      gan_iter,       'AMC_loss')
+                            monitor.record_matplot(posterior_accuracy,  gan_iter,   'apd_acc')
+                            monitor.record_matplot(posterior_loss,      gan_iter,       'apd_loss')
                         if posterior_accuracy:
                             print("GAN It: {:5d} | Acc: {:.4f} | Point Acc: {:.4f} | Posterior Acc: {:.4f}".format(gan_iter, accuracy, point_accuracy, posterior_accuracy))
                         else:
@@ -643,16 +645,16 @@ def main(arguments):
                                 print("({}) Anomaly Detection Results: \nBase Rate: {:.2f}, AUROC: {:.2f}, AUPR+: {:.2f}, AUPR-: {:.2f}".format(func_name.upper(), normality_base_rate, auroc, n_aupr, ab_aupr))
 
                     ################
-                    ### AMC Anom ###
+                    ### apd Anom ###
                     ################
-                    if arguments['--amc']:
+                    if arguments['--apd']:
                         ## create a new model instance to hold GAN samples
                         ## Model
                         gmodel = eval(model_config['name'])(**model_config['kwargs'])
                         gmodel = utils.cuda(gmodel, arguments)
                         ## get the samples
                         gmodel.posterior_samples = obj_traingan.get_samples(sample_size)
-                        gmodel.posterior_weights = [1 for _ in xrange(len(gmodel.posterior_samples))]
+                        gmodel.posterior_weights = [1 for _ in range(len(gmodel.posterior_samples))]
 
                         ## copied from above, TODO: loop
                         for ood_dataset_name in opt_config['ood_datasets']:
@@ -662,16 +664,16 @@ def main(arguments):
                             normality_base_rate, auroc, n_aupr, ab_aupr = utils.show_ood_detection_results_softmax(test_inputs_anomaly_detection, cur_ood_data,  utils.posterior_expectation,
                                                                                                                    {'model': gmodel, 'use_mini_batch': opt_config['batch_size']})
                             print(
-                            "(AMC) Anomaly Detection Results: \nBase Rate: {:.2f}, AUROC: {:.2f}, AUPR+: {:.2f}, AUPR-: {:.2f}".format(
+                            "(apd) Anomaly Detection Results: \nBase Rate: {:.2f}, AUROC: {:.2f}, AUPR+: {:.2f}, AUPR-: {:.2f}".format(
                                 normality_base_rate, auroc, n_aupr, ab_aupr))
-                            monitor.record_matplot(auroc, gan_iter, 'AMC_auroc')
-                            monitor.record_matplot(n_aupr, gan_iter, 'AMC_aupr+')
-                            monitor.record_matplot(ab_aupr, gan_iter, 'AMC_aupr-')
+                            monitor.record_matplot(auroc, gan_iter, 'apd_auroc')
+                            monitor.record_matplot(n_aupr, gan_iter, 'apd_aupr+')
+                            monitor.record_matplot(ab_aupr, gan_iter, 'apd_aupr-')
 
                             normality_base_rate, auroc, n_aupr, ab_aupr = utils.show_ood_detection_results_softmax(test_inputs_anomaly_detection, cur_ood_data,  utils.posterior_expectation,
                                                                                                                    {'model': gmodel,'keep_samples': True, 'use_mini_batch': opt_config['batch_size']}, f_acq='f_bald')
                             print(
-                            "(AMC BALD) Anomaly Detection Results: \nBase Rate: {:.2f}, AUROC: {:.2f}, AUPR+: {:.2f}, AUPR-: {:.2f}".format(
+                            "(apd BALD) Anomaly Detection Results: \nBase Rate: {:.2f}, AUROC: {:.2f}, AUPR+: {:.2f}, AUPR-: {:.2f}".format(
                                 normality_base_rate, auroc, n_aupr, ab_aupr))
                             monitor.record_matplot(auroc, gan_iter, 'abald_auroc')
                             monitor.record_matplot(n_aupr, gan_iter, 'abald_aupr+')
@@ -694,23 +696,23 @@ def main(arguments):
                     ###
                     check_point(model, optimizer, iteration, exp_name)
                     monitor.save_result_numpy(log_folder)
-                ## AMC
-                if arguments['--amc'] and iteration > 0 and iteration % (amc_config['T_sgld']*sample_interval) == 0:
+                ## apd
+                if arguments['--apd'] and iteration > 0 and iteration % (apd_config['T_sgld']*sample_interval) == 0:
 
                         posterior_samples = []
-                        for m in models: posterior_samples += m.posterior_samples[-amc_config['T_sgld']:]
+                        for m in models: posterior_samples += m.posterior_samples[-apd_config['T_sgld']:]
                         np_samples = _flatten_npyfy(posterior_samples)
                         gan_inp_buffer += list(np_samples)
                         if len(gan_inp_buffer) > gan_bs:
-                            for _ in range(amc_config['T_gan']):
+                            for _ in range(apd_config['T_gan']):
                                 idxs = np.arange(len(gan_inp_buffer))
                                 np.random.shuffle(idxs)
                                 obj_traingan.update_iter(gan_iter, np.array(gan_inp_buffer)[idxs[:gan_bs]])
                                 gan_iter+=1
                             ## remove old MCMC samples
-                            while len(gan_inp_buffer)>amc_config['amc_buffer_size']: del gan_inp_buffer[0]
+                            while len(gan_inp_buffer)>apd_config['apd_buffer_size']: del gan_inp_buffer[0]
                         ### infinite chains
-                        if 'is_infinite_chains' in amc_config and amc_config['is_infinite_chains']:
+                        if 'is_infinite_chains' in apd_config and apd_config['is_infinite_chains']:
                             sds = obj_traingan.get_samples(len(models))
                             for (idx, m) in enumerate(models):
                                 m.load_state_dict(sds[idx])
@@ -757,7 +759,7 @@ def main(arguments):
         for i in range(num_test_runs):
             print("Test run {}".format(i))
             posterior_samples = utils.load_posterior_state_dicts(src_dir=exp_name, example_model=model, num_samples=num_samples)
-            posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+            posterior_weights = [1 for _ in range(len(posterior_samples))]
             model.posterior_samples = posterior_samples  # Should change this structure
             model.posterior_weights = posterior_weights
             point_accuracy, point_loss, posterior_accuracy, posterior_loss = evaluate(model, testloader,posterior_flag, Loss, opt_config)
@@ -862,7 +864,7 @@ def main(arguments):
 
                     for i in range(num_test_runs):
                         posterior_samples = utils.load_posterior_state_dicts(src_dir=exp_name, example_model=model, num_samples=num_samples)
-                        posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+                        posterior_weights = [1 for _ in range(len(posterior_samples))]
                         model.posterior_samples = posterior_samples  # Should change this structure
                         model.posterior_weights = posterior_weights
 

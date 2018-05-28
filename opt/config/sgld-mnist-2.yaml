@@ -1,0 +1,33 @@
+node1: &dataset_size 50000
+# batch_size: 100
+batch_size: 500
+
+dataset_size: *dataset_size
+name: 'NoisedSGD'
+kwargs:
+  lr: .05
+  dataset_size: *dataset_size
+  momentum: 0.0
+  weight_decay: 0.05
+
+max_train_iters: 200000
+
+ood_scale: 1
+# ood_scale: 5
+n_anom: 2000
+
+
+sample_size: 10000
+test_sample_batch_size: 50
+sample_interval: 5
+burnin_iters: 500
+validation_interval: 1000  # Show intermediate results less often -- faster training
+variance_monitor_interval: 50
+
+num_test_runs: 10
+num_test_samples: 200
+
+ood_datasets: ['notMNIST', 'omniglot', 'cifar10bw', 'gaussian', 'uniform']
+test_ood_scales: [1, 5, 10, 20]
+
+# lrpoly: [0.01, 1, 0.55] #(a,b,g) for a(b+t)^(-g)

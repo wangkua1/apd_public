@@ -106,6 +106,8 @@ if __name__ == '__main__':
     if len(DATA_DIR) == 0:
         raise Exception('Please specify path to data directory in gan.py!')
 
+
+
     exp_dir_prefix = ''
 
     MODE = opt_config['mode']
@@ -254,7 +256,7 @@ if __name__ == '__main__':
                     _data = gen.next()
                     # pdb.set_trace()
                     _disc_cost, _, grads = session.run([disc_cost, disc_train_op, gradients], feed_dict={real_data: _data})
-                    
+
                     if MODE == 'wgan':
                         _ = session.run(clip_disc_weights)
 
@@ -386,6 +388,7 @@ if __name__ == '__main__':
 
             print("OOD SCALE {}".format(scale))
             print("--------------------------")
+
 
             test_inputs_anomaly_detection = utils.get_anomaly_detection_test_inputs(testloader, opt_config, arguments)
             if arguments['--cuda']:

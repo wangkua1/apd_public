@@ -1,0 +1,33 @@
+task: 'mnist'
+mode: 'wgan-gp'
+# mode: 'wgan'
+n_train: 1000
+# n_train: 100
+
+batch_size: 100  # Batch size  (what's the diff between batch size and sample_size??)
+test_input_batch_size: 500
+
+ood_scale: 5
+n_anom: 2000
+
+sample_size: 1000  # Not used right now
+validation_interval: 2000
+# validation_interval: 50
+
+gan_layers: 3
+# gan_dim: 100  # The size of the hidden state in the generator and discriminator
+gan_dim: 100  # The size of the hidden state in the generator and discriminator
+
+zdim: 32
+lambda: 10  # Gradient penalty lambda hyperparameter
+
+iters: 100000  # How many generator iterations to train for
+critic_iters: 5 # How many critic iterations per generator iteration
+
+num_test_runs: 10
+# num_test_samples: 1000  # How many samples to generate or true samples to load for test evaluation
+num_test_samples: 200  # How many samples to generate or true samples to load for test evaluation
+
+ood_datasets: ['notMNIST', 'omniglot', 'cifar10bw', 'gaussian', 'uniform']
+ood_acq_funcs: ['f_bald', 'f_entropy', 'f_maxy']
+test_ood_scales: [1, 5, 10]

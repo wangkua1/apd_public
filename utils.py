@@ -185,9 +185,9 @@ def posterior_expectation(model, inputs, keep_samples=False, use_mini_batch=None
         outputs_prob = F.softmax(outputs_samples).cpu() ## otherwise run out of gpu memory
         sample_sms.append(outputs_prob)
         # outputs_sample --> softmax --> prob
-        outputs_weighted_sum = outputs_weighted_sum + outputs_prob * posterior_weights[sample_idx]
+        outputs_weighted_sum = outputs_weighted_sum + outputs_prob * float(posterior_weights[sample_idx])
     model.train()
-    outputs_expectation = outputs_weighted_sum / (sum(posterior_weights))
+    outputs_expectation = outputs_weighted_sum / float(sum(posterior_weights))
 
     # pdb.set_trace()
     # outputs_expectation = outputs_expectation.cuda() ## put it back on gpu
