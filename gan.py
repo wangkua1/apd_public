@@ -241,7 +241,7 @@ if __name__ == '__main__':
         # At any point you can hit Ctrl+C to break out of training early, and proceed to run on test data.
         try:
 
-            for iteration in xrange(ITERS):
+            for iteration in range(ITERS):
                 start_time = time.time()
                 # Train generator
                 if iteration > 0:
@@ -252,8 +252,9 @@ if __name__ == '__main__':
                 else:
                     disc_iters = CRITIC_ITERS
 
-                for i in xrange(disc_iters):
-                    _data = gen.next()
+                for i in range(disc_iters):
+                    # _data = gen.next()
+                    _data = next(gen)
                     # pdb.set_trace()
                     _disc_cost, _, grads = session.run([disc_cost, disc_train_op, gradients], feed_dict={real_data: _data})
 
@@ -343,7 +344,7 @@ if __name__ == '__main__':
             sample_params = sample_params[:num_test_samples]
 
             sample_dics = utils.prepare_torch_dicts(sample_params, model)
-            posterior_weights = [1 for _ in xrange(len(sample_dics))]
+            posterior_weights = [1 for _ in range(len(sample_dics))]
 
             model.posterior_samples = sample_dics  # Should change this structure
             model.posterior_weights = posterior_weights
@@ -361,7 +362,7 @@ if __name__ == '__main__':
 
             sample_dics_real = utils.load_posterior_state_dicts(src_dir=src_dir, example_model=model, num_samples=num_test_samples)
 
-            posterior_weights = [1 for _ in xrange(len(sample_dics_real))]
+            posterior_weights = [1 for _ in range(len(sample_dics_real))]
             model.posterior_samples = sample_dics_real  # Should change this structure
             model.posterior_weights = posterior_weights
             point_accuracy, point_loss, posterior_accuracy, posterior_loss = gan_utils.evaluate(model, testloader, sample_dics_real, posterior_weights, posterior_flag, Loss, opt_config, arguments)
@@ -420,7 +421,7 @@ if __name__ == '__main__':
                         sample_params = sample_params[:num_test_samples]
 
                         sample_dics = utils.prepare_torch_dicts(sample_params, model)
-                        posterior_weights = [1 for _ in xrange(len(sample_dics))]
+                        posterior_weights = [1 for _ in range(len(sample_dics))]
 
                         model.posterior_samples = sample_dics  # Should change this structure
                         model.posterior_weights = posterior_weights
@@ -470,7 +471,7 @@ if __name__ == '__main__':
                     for i in range(num_test_runs):
                         # print("Test run {}".format(i))
                         posterior_samples = utils.load_posterior_state_dicts(src_dir=src_dir, example_model=model, num_samples=num_test_samples)
-                        posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+                        posterior_weights = [1 for _ in range(len(posterior_samples))]
                         model.posterior_samples = posterior_samples  # Should change this structure
                         model.posterior_weights = posterior_weights
 

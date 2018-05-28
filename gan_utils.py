@@ -52,7 +52,7 @@ def data_generator(src_dir, batch_size, N_TRAIN, sampling_type='random'):
         # rng_state = np.random.get_state()
         np.random.shuffle(data)
         # np.random.set_state(rng_state)
-        for i in range(len(data) / batch_size):
+        for i in range(len(data) // batch_size):
             yield data[i*batch_size:(i+1)*batch_size]
 
     return get_epoch
