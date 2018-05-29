@@ -77,7 +77,9 @@ python gan.py CE.fc-mnist-400-X-sgld-mnist-1-X-mnist-50000@2017-12-12 opt/gan-co
 
 
 ### Active Learning
+See commands in paper-act2.sh for running active learning experiments.
 
+There is a ipynb in notebooks for visualizing the results.
 
 
 ### Adversarial Example Detection
