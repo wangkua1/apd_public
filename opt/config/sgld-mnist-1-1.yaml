@@ -12,10 +12,9 @@ kwargs:
 
 max_train_iters: 200000
 
-ood_scale: 1
-# ood_scale: 5
+# ood_scale: 1
+ood_scale: 5
 n_anom: 2000
-
 
 # sample_size: 10000
 sample_size: 100
@@ -29,7 +28,6 @@ num_test_runs: 10
 num_test_samples: 200
 
 ood_datasets: ['notMNIST', 'omniglot', 'cifar10bw', 'gaussian', 'uniform']
-# ood_datasets: ['notMNIST']
 test_ood_scales: [1, 5, 10]
 # ood_acq_funcs: ['f_bald', 'f_entropy', 'f_maxy']
 ood_acq_funcs: ['f_maxy']
