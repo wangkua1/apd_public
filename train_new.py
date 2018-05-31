@@ -1,5 +1,5 @@
-
 """train_new.py
+
 Usage:
     train_new.py <f_model_config> <f_opt_config> <dataset> [--dont-save] [--db] [--cuda] [--test] [--mc_dropout_passes=<passes>] [--apd_gan=<gan_config>] [--apd=<apd_config>] [--prefix=<p>]
     train_new.py <f_model_config> <f_opt_config> <dataset> [--dont-save] [--db] [--cuda] [--test] [--mc_dropout_passes=<passes>] [--prefix=<p>]
@@ -18,14 +18,7 @@ Example:
     python train_new.py model/config/fc1-mnist-100.yaml opt/config/sgld-mnist-1.yaml mnist-50000 --cuda
 
     python train_new.py model/config/cnn-globe.yaml opt/config/sgld-mnist-1.yaml mnist-50000 --cuda
-
-    ---------------
-    python train_new.py model/config/fc1-100.yaml opt/config/nsgd-bdk.yaml babymnist-1000 --ce --cuda
-
-    python train_new.py model/config/fc1-100.yaml opt/config/nsgd-bdk.yaml babymnist-1000 --ce --cuda --mc_dropout_passes 100
-
 """
-from __future__ import division
 import matplotlib as mtl
 mtl.use('Agg')
 import os
@@ -34,7 +27,7 @@ import copy
 import yaml
 import shutil
 import datetime
-import tabulate
+# import tabulate
 from docopt import docopt
 
 from tensorboard_monitor.configuration import *
@@ -50,7 +43,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 
-from tqdm import tqdm
+# from tqdm import tqdm
 import pickle as pickle
 
 # Local imports
@@ -64,6 +57,7 @@ torch.backends.cudnn.enabled = False
 ## GAN related
 import gan_utils
 from gan_pytorch import *
+
 
 def load_configuration(arguments, name_dataset):
     if arguments['-r']:
@@ -149,7 +143,6 @@ def check_point(model, optimizer, iteration, exp_name):
 
         torch.save(model.state_dict(), name)
         torch.save(optimizer.state_dict(), './saves/%s/opt_%i.t7' % (exp_name, iteration))
-
 
 
 def posterior_sampling(sample_size, model, learning_rate):
@@ -288,7 +281,6 @@ def evaluate(model, testloader, posterior_flag, Loss, opt_config):
         # Bayesian Prediction
         if posterior_flag:
             # posterior_outputs = utils.posterior_expectation(model, test_inputs)
-            # pdb.set_trace()
             posterior_outputs = utils.posterior_expectation(model, test_inputs, keep_samples=False, use_mini_batch=opt_config['batch_size'])
             # posterior_loss_batch = Loss.nll(torch.log(posterior_outputs), test_labels)
             posterior_loss_batch = F.nll_loss(torch.log(posterior_outputs), test_labels.cpu())
@@ -428,7 +420,6 @@ def main(arguments):
     ### Load dataset ###
     ####################
     # trainLoader automatically generate training_batch
-    # pdb.set_trace()
     trainloader, valloader, testloader, name_dataset = utils.get_dataloader(name_task, batch_size)
     ood_data = utils.load_ood_data(name_dataset, opt_config)
 
@@ -447,7 +438,6 @@ def main(arguments):
     ### Training ###
     ################
 
-
     # # At any point you can hit Ctrl+C to break out of training early, and proceed to run on test data.
     try:
         # for iteration in range(num_max_iteration):
@@ -459,7 +449,7 @@ def main(arguments):
 
                 # Update learning rate
                 learning_rate = update_LearningRate(optimizer, iteration, opt_config)
-                # pdb.set_trace()
+
                 # Inference
                 optimizer.zero_grad()
                 outputs = models[0].forward(inputs)
@@ -681,7 +671,7 @@ def main(arguments):
 
                     print
 
-                #
+
                 if iteration > 0 and iteration % (sample_size*sample_interval) == 0:
                     if not arguments['--dont-save']:
                         # print("Saving {} samples...".format(sample_size))
@@ -696,6 +686,7 @@ def main(arguments):
                     ###
                     check_point(model, optimizer, iteration, exp_name)
                     monitor.save_result_numpy(log_folder)
+
                 ## apd
                 if arguments['--apd'] and iteration > 0 and iteration % (apd_config['T_sgld']*sample_interval) == 0:
 
@@ -727,6 +718,10 @@ def main(arguments):
     ##################################
     ### Termination -- Run on test ###
     ##################################
+
+    print('=' * 80)
+    print('Test')
+    print('=' * 80)
 
     num_test_runs = opt_config['num_test_runs']
 
@@ -944,14 +939,6 @@ def main(arguments):
     # mean, std = anomaly_detection_monitor.statistics_result('anomaly_detection', 100)
     # print("Mean: {}".format(mean))
     # print("Std: {}".format(std))
-
-    # Print model parameters
-
-    # Save results table
-
-    # Print results table
-
-
 
 
 if __name__ == '__main__':

@@ -4,15 +4,8 @@ Usage:
     gan.py <src_dir> <f_opt_config> [--cuda] [--test]
 
 Example:
-    OBSOLETE:
-    python gan.py CE.fc-baby-X-sgld-baby-X-babymnist@2017-11-21 wgan-gp 10000 200 babymnist
-
-    # NEW FORMAT: Just pass in the save directory and the GAN config file
-    python gan.py cifar-cnn-globe-X-sgld-cifar5-X-cifar5-20000@2018-02-01 opt/gan-config/gan-cifar5.yaml
-    python gan.py cnn-globe-X-sgld-mnist-1-X-mnist-50000@2018-02-05 opt/gan-config/gan1.yaml --cuda
-
-    python gan.py CE.fc1-mnist-100-X-sgld-mnist-2-X-mnist-50000@2017-12-09 opt/gan-config/gan1.yaml
-    python gan.py CE.fc1-mnist-100-X-sgld-mnist-2-X-mnist-50000@2017-12-10 opt/gan-config/gan1.yaml
+    # FORMAT: Pass in the save directory and the GAN config file
+    python gan.py CE.fc1-mnist-100-X-sgld-mnist-1-X-mnist-50000@2017-12-12 opt/gan-config/gan1.yaml
 """
 
 import os
@@ -23,6 +16,7 @@ import yaml
 import itertools
 sys.path.append(os.getcwd())
 from docopt import docopt
+from collections import OrderedDict
 
 import numpy as np
 import tensorflow as tf
@@ -33,7 +27,6 @@ import tflib.plot
 from tqdm import tqdm
 
 import torch
-from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 
@@ -44,7 +37,7 @@ from opt.loss import *
 
 
 """
-tensorflow stuffs
+tensorflow stuff
 """
 def ReLULayer(name, n_in, n_out, inputs):
     output = lib.ops.linear.Linear(
@@ -65,7 +58,6 @@ def Generator(n_samples):
     output = ReLULayer('Generator.2', DIM, DIM, output)
     output = ReLULayer('Generator.3', DIM, DIM, output)
     output = lib.ops.linear.Linear('Generator.4', DIM, OUTPUT_DIM, output)
-    # output = lib.ops.linear.Linear('Generator.4', ZDIM, OUTPUT_DIM, output)
     return output
 
 
@@ -75,11 +67,10 @@ def Discriminator(inputs):
     output = ReLULayer('Discriminator.2', DIM, DIM, output)
     output = ReLULayer('Discriminator.3', DIM, DIM, output)
     output = lib.ops.linear.Linear('Discriminator.4', DIM, 1, output)
-    # output = lib.ops.linear.Linear('Discriminator.4', OUTPUT_DIM, 1, output)
     return tf.reshape(output, [-1])
 
 """
-END of tensorflow stuffs
+END of tensorflow stuff
 """
 
 
@@ -129,8 +120,6 @@ if __name__ == '__main__':
         ITERS = 0  # Don't do any training iterations, just jump to the test code
     else:
         ITERS = opt_config['iters'] # How many generator iterations to train for
-
-    # ITERS = opt_config['iters'] # How many generator iterations to train for
 
 
     # Dataset iterators
@@ -188,8 +177,6 @@ if __name__ == '__main__':
 
         gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
         disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
-        # gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-5, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
-        # disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-5, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
 
     elif MODE == 'dcgan':
         gen_cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=disc_fake, labels=tf.ones_like(disc_fake)))
@@ -218,7 +205,7 @@ if __name__ == '__main__':
     elif TASK == 'babymnist':
         validater = gan_utils.EvalBabyMNIST(model, opt_config, arguments['--cuda'], log_dir)
         task_fs = [validater.babymnist_validate, validater.babymnist_ood]
-    elif TASK == 'mnist':  # TODO: Incorporate support for FashionMNIST
+    elif TASK == 'mnist':
         validater = gan_utils.EvalMNIST(model, opt_config, arguments['--cuda'], log_dir)
         task_fs = [validater.mnist_validate, validater.mnist_ood]
     elif TASK == 'cifar5':
@@ -255,7 +242,6 @@ if __name__ == '__main__':
                 for i in range(disc_iters):
                     # _data = gen.next()
                     _data = next(gen)
-                    # pdb.set_trace()
                     _disc_cost, _, grads = session.run([disc_cost, disc_train_op, gradients], feed_dict={real_data: _data})
 
                     if MODE == 'wgan':
@@ -284,7 +270,6 @@ if __name__ == '__main__':
                     # saver.save(session, 'gan_checkpoint', global_step=iteration)
 
                     sample_params = session.run(fake_data)
-                    # pdb.set_trace()
                     sample_dics = utils.prepare_torch_dicts(sample_params, model)
                     sample_dics_real = utils.prepare_torch_dicts(_data, model)
 
