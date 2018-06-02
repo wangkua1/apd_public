@@ -5,7 +5,7 @@ Usage:
 
 Example:
     # FORMAT: Pass in the save directory and the GAN config file
-    python gan.py CE.fc1-mnist-100-X-sgld-mnist-1-X-mnist-50000@2017-12-12 opt/gan-config/gan1.yaml
+    python gan.py fc1-mnist-100-X-sgld-mnist-1-1-X-mnist-50000@2018-05-31 opt/gan-config/gan1.yaml
 """
 
 import os
@@ -24,7 +24,7 @@ import tflib as lib
 import tflib.ops.linear
 # import tflib.ops.batchnorm
 import tflib.plot
-from tqdm import tqdm
+# from tqdm import tqdm
 
 import torch
 
