@@ -1,0 +1,4 @@
+matplotlib
+tabulate
+docopt
+tqdm
