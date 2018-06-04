@@ -434,7 +434,7 @@ class EvalCIFAR(object):
         test_labels = self.test_labels
 
         model.posterior_samples = posterior_samples
-        model.posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+        model.posterior_weights = [1 for _ in range(len(posterior_samples))]
         posterior_outputs = utils.posterior_expectation(model, test_inputs)
 
         # pdb.set_trace()  # to check the nans...
@@ -466,7 +466,7 @@ class EvalCIFAR(object):
         opt_config = self.opt_config
 
         model.posterior_samples = posterior_samples
-        model.posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+        model.posterior_weights = [1 for _ in range(len(posterior_samples))]
 
         # Bayesian
         for ood_dataset_name in opt_config['ood_datasets']:
