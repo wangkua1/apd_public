@@ -1,8 +1,7 @@
 task: 'mnist'
 mode: 'wgan-gp'
-# mode: 'wgan'
-n_train: 1000
-# n_train: 100
+n_train: 5000
+# n_train: 1000
 
 batch_size: 100  # Batch size  (what's the diff between batch size and sample_size??)
 test_input_batch_size: 500
@@ -15,7 +14,6 @@ validation_interval: 2000
 # validation_interval: 50
 
 gan_layers: 3
-# gan_dim: 100  # The size of the hidden state in the generator and discriminator
 gan_dim: 100  # The size of the hidden state in the generator and discriminator
 
 zdim: 32
@@ -25,7 +23,6 @@ iters: 100000  # How many generator iterations to train for
 critic_iters: 5 # How many critic iterations per generator iteration
 
 num_test_runs: 10
-# num_test_samples: 1000  # How many samples to generate or true samples to load for test evaluation
 num_test_samples: 200  # How many samples to generate or true samples to load for test evaluation
 
 ood_datasets: ['notMNIST', 'omniglot', 'cifar10bw', 'gaussian', 'uniform']

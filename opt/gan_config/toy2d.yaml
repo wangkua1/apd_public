@@ -1,0 +1,21 @@
+
+task: 'toy2d'
+mode: 'wgan-gp'
+n_train: 10000
+
+sample_size: 10000
+# sample_size: 10000
+validation_interval: 100
+
+gan_dim: 50  # The size of the hidden state in the generator and discriminator
+
+zdim: 100
+lambda: 10  # Gradient penalty lambda hyperparameter
+
+batch_size: 100  # Batch size  (what's the diff between batch size and sample_size??)
+test_input_batch_size: 500
+
+iters: 20000  # How many generator iterations to train for
+critic_iters: 5 # How many critic iterations per generator iteration
+
+n_anom: 0 #dummyy

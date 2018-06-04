@@ -1,0 +1,31 @@
+# node1: &dataset_size 50000
+# node1: &bs 50
+# node1: &bs 16
+
+task: 'mnist'
+mode: 'wgan-gp'
+n_train: 10000
+
+# batch_size: *bs
+# dataset_size: *dataset_size
+# max_train_iters: 100000
+
+ood_scale: 5
+n_anom: 300
+# n_anom: 2000
+
+sample_size: 10000
+# sample_size: 10000
+validation_interval: 100
+
+gan_dim: 20  # The size of the hidden state in the generator and discriminator
+
+zdim: 100
+lambda: 10  # Gradient penalty lambda hyperparameter
+
+batch_size: 32  # Batch size  (what's the diff between batch size and sample_size??)
+test_input_batch_size: 20
+
+iters: 200000  # How many generator iterations to train for
+critic_iters: 5 # How many critic iterations per generator iteration
+ood_datasets: ['notMNIST']

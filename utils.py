@@ -1,5 +1,3 @@
-from __future__ import division
-
 import os
 import sys
 import pdb
@@ -52,8 +50,6 @@ def load_posterior_samples(src_dir, num_samples, sampling_type='random'):
 
     elif sampling_type == 'last':
         data_files = sorted(data_files, reverse=True)  # Reverse sort based on sample number in filename
-
-        # pdb.set_trace()
 
         samples = []
         for f in data_files:
@@ -181,15 +177,14 @@ def posterior_expectation(model, inputs, keep_samples=False, use_mini_batch=None
             outputs_samples = torch.cat(outputs_samples,0)
         else:
             outputs_samples = model.forward(inputs)
-        # pdb.set_trace()
+
         outputs_prob = F.softmax(outputs_samples).cpu() ## otherwise run out of gpu memory
         sample_sms.append(outputs_prob)
         # outputs_sample --> softmax --> prob
-        outputs_weighted_sum = outputs_weighted_sum + outputs_prob * posterior_weights[sample_idx]
+        outputs_weighted_sum = outputs_weighted_sum + outputs_prob * float(posterior_weights[sample_idx])
     model.train()
-    outputs_expectation = outputs_weighted_sum / (sum(posterior_weights))
+    outputs_expectation = outputs_weighted_sum / float(sum(posterior_weights))
 
-    # pdb.set_trace()
     # outputs_expectation = outputs_expectation.cuda() ## put it back on gpu
     # restore
     model.load_state_dict(cached_params)
@@ -212,9 +207,6 @@ def posterior_uncertainty(model, inputs):
     outputs_squared_sum = 0
     model.eval()
     for sample_idx in range(num_posterior_samples):
-
-        # Old
-        # model.model.load_state_dict(posterior_samples[sample_idx])
 
         # New
         model.load_state_dict(posterior_samples[sample_idx])
@@ -268,6 +260,7 @@ def f_uncert_x(inp):
 
     squared_sum = (sample_sms * sample_sms).sum(-1).mean(0)
     return squared_sum - (sm * sm).sum(-1)
+
 
 def f_bald(inp):
     sm, sample_sms = inp

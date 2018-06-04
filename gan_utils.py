@@ -8,10 +8,11 @@ torch...
 """
 import torch
 import torch.nn as nn
-import torchvision
-import torchvision.transforms as transforms
 import torch.nn.functional as F
 from torch.autograd import Variable
+
+import torchvision
+import torchvision.transforms as transforms
 
 """
 our models/utilities
@@ -52,7 +53,7 @@ def data_generator(src_dir, batch_size, N_TRAIN, sampling_type='random'):
         # rng_state = np.random.get_state()
         np.random.shuffle(data)
         # np.random.set_state(rng_state)
-        for i in range(len(data) / batch_size):
+        for i in range(len(data) // batch_size):
             yield data[i*batch_size:(i+1)*batch_size]
 
     return get_epoch
@@ -300,13 +301,10 @@ class EvalMNIST(object):
         test_inputs = self.test_inputs
         test_labels = self.test_labels
 
-        # pdb.set_trace()
-
         model.posterior_samples = posterior_samples
         model.posterior_weights = [1 for _ in range(len(posterior_samples))]
         posterior_outputs = utils.posterior_expectation(model, test_inputs)
         # posterior_loss = F.cross_entropy(posterior_outputs.cpu(), test_labels)
-
 
         posterior_loss = F.nll_loss(torch.log(posterior_outputs.cpu()), test_labels.cpu())
         utils.check_nan(posterior_loss, check_big=True, message="")
@@ -386,7 +384,6 @@ class EvalCIFAR(object):
                         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
                     ])
 
-        # testset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
         testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
         first_5_class_idxs = [i for i in range(len(testset.test_labels)) if testset.test_labels[i] in [0,1,2,3,4]]
         testset.test_data = np.stack([testset.test_data[i, :, :, :] for i in first_5_class_idxs])
@@ -434,10 +431,9 @@ class EvalCIFAR(object):
         test_labels = self.test_labels
 
         model.posterior_samples = posterior_samples
-        model.posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+        model.posterior_weights = [1 for _ in range(len(posterior_samples))]
         posterior_outputs = utils.posterior_expectation(model, test_inputs)
 
-        # pdb.set_trace()  # to check the nans...
         posterior_loss = F.cross_entropy(posterior_outputs.cpu(), test_labels.cpu())
 
         # posterior_loss = F.nll_loss(torch.log(posterior_outputs.cpu()), test_labels.cpu())
@@ -466,7 +462,7 @@ class EvalCIFAR(object):
         opt_config = self.opt_config
 
         model.posterior_samples = posterior_samples
-        model.posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+        model.posterior_weights = [1 for _ in range(len(posterior_samples))]
 
         # Bayesian
         for ood_dataset_name in opt_config['ood_datasets']:

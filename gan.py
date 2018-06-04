@@ -4,15 +4,8 @@ Usage:
     gan.py <src_dir> <f_opt_config> [--cuda] [--test]
 
 Example:
-    OBSOLETE:
-    python gan.py CE.fc-baby-X-sgld-baby-X-babymnist@2017-11-21 wgan-gp 10000 200 babymnist
-
-    # NEW FORMAT: Just pass in the save directory and the GAN config file
-    python gan.py cifar-cnn-globe-X-sgld-cifar5-X-cifar5-20000@2018-02-01 opt/gan-config/gan-cifar5.yaml
-    python gan.py cnn-globe-X-sgld-mnist-1-X-mnist-50000@2018-02-05 opt/gan-config/gan1.yaml --cuda
-
-    python gan.py CE.fc1-mnist-100-X-sgld-mnist-2-X-mnist-50000@2017-12-09 opt/gan-config/gan1.yaml
-    python gan.py CE.fc1-mnist-100-X-sgld-mnist-2-X-mnist-50000@2017-12-10 opt/gan-config/gan1.yaml
+    # FORMAT: Pass in the save directory and the GAN config file
+    python gan.py fc1-mnist-100-X-sgld-mnist-1-1-X-mnist-50000@2018-05-31 opt/gan-config/gan1.yaml
 """
 
 import os
@@ -23,6 +16,7 @@ import yaml
 import itertools
 sys.path.append(os.getcwd())
 from docopt import docopt
+from collections import OrderedDict
 
 import numpy as np
 import tensorflow as tf
@@ -30,10 +24,9 @@ import tflib as lib
 import tflib.ops.linear
 # import tflib.ops.batchnorm
 import tflib.plot
-from tqdm import tqdm
+# from tqdm import tqdm
 
 import torch
-from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 
@@ -44,7 +37,7 @@ from opt.loss import *
 
 
 """
-tensorflow stuffs
+tensorflow stuff
 """
 def ReLULayer(name, n_in, n_out, inputs):
     output = lib.ops.linear.Linear(
@@ -65,7 +58,6 @@ def Generator(n_samples):
     output = ReLULayer('Generator.2', DIM, DIM, output)
     output = ReLULayer('Generator.3', DIM, DIM, output)
     output = lib.ops.linear.Linear('Generator.4', DIM, OUTPUT_DIM, output)
-    # output = lib.ops.linear.Linear('Generator.4', ZDIM, OUTPUT_DIM, output)
     return output
 
 
@@ -75,11 +67,10 @@ def Discriminator(inputs):
     output = ReLULayer('Discriminator.2', DIM, DIM, output)
     output = ReLULayer('Discriminator.3', DIM, DIM, output)
     output = lib.ops.linear.Linear('Discriminator.4', DIM, 1, output)
-    # output = lib.ops.linear.Linear('Discriminator.4', OUTPUT_DIM, 1, output)
     return tf.reshape(output, [-1])
 
 """
-END of tensorflow stuffs
+END of tensorflow stuff
 """
 
 
@@ -106,9 +97,8 @@ if __name__ == '__main__':
     if len(DATA_DIR) == 0:
         raise Exception('Please specify path to data directory in gan.py!')
 
-    # exp_dir_prefix = '3-lay'
-    # exp_dir_prefix = 'fastrun'
-    # exp_dir_prefix = '1-l'
+
+
     exp_dir_prefix = ''
 
     MODE = opt_config['mode']
@@ -130,8 +120,6 @@ if __name__ == '__main__':
         ITERS = 0  # Don't do any training iterations, just jump to the test code
     else:
         ITERS = opt_config['iters'] # How many generator iterations to train for
-
-    # ITERS = opt_config['iters'] # How many generator iterations to train for
 
 
     # Dataset iterators
@@ -189,8 +177,6 @@ if __name__ == '__main__':
 
         gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
         disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
-        # gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-5, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
-        # disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-5, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
 
     elif MODE == 'dcgan':
         gen_cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=disc_fake, labels=tf.ones_like(disc_fake)))
@@ -219,7 +205,7 @@ if __name__ == '__main__':
     elif TASK == 'babymnist':
         validater = gan_utils.EvalBabyMNIST(model, opt_config, arguments['--cuda'], log_dir)
         task_fs = [validater.babymnist_validate, validater.babymnist_ood]
-    elif TASK == 'mnist':  # TODO: Incorporate support for FashionMNIST
+    elif TASK == 'mnist':
         validater = gan_utils.EvalMNIST(model, opt_config, arguments['--cuda'], log_dir)
         task_fs = [validater.mnist_validate, validater.mnist_ood]
     elif TASK == 'cifar5':
@@ -242,7 +228,7 @@ if __name__ == '__main__':
         # At any point you can hit Ctrl+C to break out of training early, and proceed to run on test data.
         try:
 
-            for iteration in xrange(ITERS):
+            for iteration in range(ITERS):
                 start_time = time.time()
                 # Train generator
                 if iteration > 0:
@@ -253,32 +239,11 @@ if __name__ == '__main__':
                 else:
                     disc_iters = CRITIC_ITERS
 
-                for i in xrange(disc_iters):
-                    _data = gen.next()
-                    # pdb.set_trace()
+                for i in range(disc_iters):
+                    # _data = gen.next()
+                    _data = next(gen)
                     _disc_cost, _, grads = session.run([disc_cost, disc_train_op, gradients], feed_dict={real_data: _data})
-                    # _disc_cost, _, _ = session.run([disc_cost, disc_train_op, clip_disc_weights], feed_dict={real_data: _data})
-                    # _disc_cost, _, diff, interp, grads, slo, grapen = session.run([disc_cost,
-                    #                                                                disc_train_op,
-                    #                                                                differences,
-                    #                                                                interpolates,
-                    #                                                                gradients,
-                    #                                                                slopes,
-                    #                                                                gradient_penalty], feed_dict={real_data: _data})
 
-                    # print("_disc_cost {}".format(_disc_cost))
-                    # print("diff {}".format(diff))
-                    # print("interp {}".format(interp))
-                    # print("grads {}".format(grads))
-                    # print("slo {}".format(slo))
-                    # print("grapen {}".format(grapen))
-                    # pdb.set_trace()
-                    # differences
-                    # interpolates
-                    # gradients
-                    # slopes
-                    # gradient_penalty
-                    # pdb.set_trace()
                     if MODE == 'wgan':
                         _ = session.run(clip_disc_weights)
 
@@ -305,7 +270,6 @@ if __name__ == '__main__':
                     # saver.save(session, 'gan_checkpoint', global_step=iteration)
 
                     sample_params = session.run(fake_data)
-                    # pdb.set_trace()
                     sample_dics = utils.prepare_torch_dicts(sample_params, model)
                     sample_dics_real = utils.prepare_torch_dicts(_data, model)
 
@@ -365,7 +329,7 @@ if __name__ == '__main__':
             sample_params = sample_params[:num_test_samples]
 
             sample_dics = utils.prepare_torch_dicts(sample_params, model)
-            posterior_weights = [1 for _ in xrange(len(sample_dics))]
+            posterior_weights = [1 for _ in range(len(sample_dics))]
 
             model.posterior_samples = sample_dics  # Should change this structure
             model.posterior_weights = posterior_weights
@@ -383,7 +347,7 @@ if __name__ == '__main__':
 
             sample_dics_real = utils.load_posterior_state_dicts(src_dir=src_dir, example_model=model, num_samples=num_test_samples)
 
-            posterior_weights = [1 for _ in xrange(len(sample_dics_real))]
+            posterior_weights = [1 for _ in range(len(sample_dics_real))]
             model.posterior_samples = sample_dics_real  # Should change this structure
             model.posterior_weights = posterior_weights
             point_accuracy, point_loss, posterior_accuracy, posterior_loss = gan_utils.evaluate(model, testloader, sample_dics_real, posterior_weights, posterior_flag, Loss, opt_config, arguments)
@@ -411,10 +375,7 @@ if __name__ == '__main__':
             print("OOD SCALE {}".format(scale))
             print("--------------------------")
 
-            # data for anomaly detection
-            # Note: These inputs are always going to be the same, because we're taking the first N batches from the
-            #       testloader, which is not shuffled
-            # test_inputs_anomaly_detection = get_anomaly_detection_test_inputs(testloader, opt_config)
+
             test_inputs_anomaly_detection = utils.get_anomaly_detection_test_inputs(testloader, opt_config, arguments)
             if arguments['--cuda']:
                 test_inputs_anomaly_detection = test_inputs_anomaly_detection.cuda()
@@ -445,7 +406,7 @@ if __name__ == '__main__':
                         sample_params = sample_params[:num_test_samples]
 
                         sample_dics = utils.prepare_torch_dicts(sample_params, model)
-                        posterior_weights = [1 for _ in xrange(len(sample_dics))]
+                        posterior_weights = [1 for _ in range(len(sample_dics))]
 
                         model.posterior_samples = sample_dics  # Should change this structure
                         model.posterior_weights = posterior_weights
@@ -495,7 +456,7 @@ if __name__ == '__main__':
                     for i in range(num_test_runs):
                         # print("Test run {}".format(i))
                         posterior_samples = utils.load_posterior_state_dicts(src_dir=src_dir, example_model=model, num_samples=num_test_samples)
-                        posterior_weights = [1 for _ in xrange(len(posterior_samples))]
+                        posterior_weights = [1 for _ in range(len(posterior_samples))]
                         model.posterior_samples = posterior_samples  # Should change this structure
                         model.posterior_weights = posterior_weights
 
