@@ -27,6 +27,7 @@ import copy
 import yaml
 import shutil
 import datetime
+import pickle as pkl
 # import tabulate
 from docopt import docopt
 
@@ -800,6 +801,8 @@ def main(arguments):
     ### Test Anomaly detection ###
     ##############################
 
+    anom_result_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+
     for scale in opt_config['test_ood_scales']:
         scale = int(scale)
 
@@ -838,6 +841,9 @@ def main(arguments):
                     print(
                         "({} Non-Bayesian) Anomaly Detection Results: \nBase Rate: {:.2f}, AUROC: {:.2f}, AUPR+: {:.2f}, AUPR-: {:.2f}".format(
                             func_name, normality_base_rate, auroc, n_aupr, ab_aupr))
+
+                    anom_result_dict[scale][ood_dataset_name][func_name] = [auroc, n_aupr, ab_aupr]
+
             # anomaly_detection_monitor.record_matplot([auroc, n_aupr, ab_aupr], iteration, 'point_estimation')
 
         #################################################
@@ -890,6 +896,11 @@ def main(arguments):
                           np.mean(auroc_list), np.std(auroc_list),
                           np.mean(n_aupr_list), np.std(n_aupr_list),
                           np.mean(ab_aupr_list), np.std(ab_aupr_list)))
+
+                    anom_result_dict[scale][ood_dataset_name][func_name] = [(np.mean(auroc_list), np.std(auroc_list)),
+                                                                            (np.mean(n_aupr_list), np.std(n_aupr_list)),
+                                                                            (np.mean(ab_aupr_list), np.std(ab_aupr_list))]
+
                 # anomaly_detection_monitor.record_matplot([auroc, n_aupr, ab_aupr], iteration, 'bayesian')
 
 
@@ -915,11 +926,12 @@ def main(arguments):
                     ab_aupr_list = []
 
                     for i in range(num_test_runs):
-                        normality_base_rate, auroc, n_aupr, ab_aupr = utils.show_ood_detection_results_softmax(test_inputs_anomaly_detection,
-                                                                                                               cur_ood_data,
-                                                                                                               utils.mc_dropout_expectation,
-                                                                                                               {'model': model, 'passes': arguments['--mc_dropout_passes'], 'keep_samples': False},
-                                                                                                               f_acq=func_name)
+                        if func_name != 'f_bald':
+                            normality_base_rate, auroc, n_aupr, ab_aupr = utils.show_ood_detection_results_softmax(test_inputs_anomaly_detection,
+                                                                                                                   cur_ood_data,
+                                                                                                                   utils.mc_dropout_expectation,
+                                                                                                                   {'model': model, 'passes': arguments['--mc_dropout_passes'], 'keep_samples': False},
+                                                                                                                   f_acq=func_name)
                         # normality_base_rate, auroc, n_aupr, ab_aupr = utils.show_ood_detection_results_softmax(test_inputs_anomaly_detection, cur_ood_data, utils.mc_dropout_expectation,
                         #                                                                                        {'model': model, 'passes': arguments['--mc_dropout_passes']})
                         normality_base_rate_list.append(normality_base_rate)
@@ -934,6 +946,25 @@ def main(arguments):
                           np.mean(auroc_list), np.std(auroc_list),
                           np.mean(n_aupr_list), np.std(n_aupr_list),
                           np.mean(ab_aupr_list), np.std(ab_aupr_list)))
+
+                    anom_result_dict[scale][ood_dataset_name][func_name] = [(np.mean(auroc_list), np.std(auroc_list)),
+                                                                            (np.mean(n_aupr_list), np.std(n_aupr_list)),
+                                                                            (np.mean(ab_aupr_list), np.std(ab_aupr_list))]
+
+    for scale in opt_config['test_ood_scales']:
+        for ood_dataset_name in opt_config['ood_datasets']:
+            anom_result_dict[scale][ood_dataset_name] = dict(anom_result_dict[scale][ood_dataset_name])
+        anom_result_dict[scale] = dict(anom_result_dict[scale])
+
+    anom_result_dict = dict(anom_result_dict)
+
+
+    with open(os.path.join('saves', exp_name, 'anom_res_s:{}'.format(opt_config['num_test_samples'])), 'wb') as f:
+        pkl.dump(anom_result_dict, f)
+
+    print('-' * 89)
+    print('Experiment directory: {}'.format(os.path.join('saves', exp_name)))
+    print('-' * 89)
 
     # loss_monitor.save_result_numpy(log_folder)
     # mean, std = anomaly_detection_monitor.statistics_result('anomaly_detection', 100)
