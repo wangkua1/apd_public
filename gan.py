@@ -14,9 +14,10 @@ import pdb
 import time
 import yaml
 import itertools
+import pickle as pkl
 sys.path.append(os.getcwd())
 from docopt import docopt
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import numpy as np
 import tensorflow as tf
@@ -24,7 +25,6 @@ import tflib as lib
 import tflib.ops.linear
 # import tflib.ops.batchnorm
 import tflib.plot
-# from tqdm import tqdm
 
 import torch
 
@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
 
 
-    exp_dir_prefix = ''
+    exp_dir_prefix = opt_config['exp_dir_prefix']
 
     MODE = opt_config['mode']
     DIM = opt_config['gan_dim']
@@ -267,7 +267,7 @@ if __name__ == '__main__':
                 if (iteration > 5) and (iteration % opt_config['validation_interval'] == 0):
                     lib.plot.flush()
 
-                    # saver.save(session, 'gan_checkpoint', global_step=iteration)
+                    saver.save(session, './gan_checkpoint')
 
                     sample_params = session.run(fake_data)
                     sample_dics = utils.prepare_torch_dicts(sample_params, model)
@@ -294,10 +294,15 @@ if __name__ == '__main__':
             print('Exiting from training early!')
 
 
+        print('-' * 89)
+        print('Experiment directory: {}'.format(os.path.join('gan_exps', exp_dir)))
+        print('-' * 89)
 
         ########################
         ### GAN TEST RESULTS ###
         ########################
+
+        saver.restore(session, "./gan_checkpoint")
 
         os.chdir('../..')
 
@@ -306,7 +311,8 @@ if __name__ == '__main__':
         ood_data = validater.ood_data
 
         num_test_runs = opt_config['num_test_runs']
-        num_test_samples = opt_config['num_test_samples']
+        num_test_apd_samples = opt_config['num_test_apd_samples']
+        num_test_sgld_samples = opt_config['num_test_sgld_samples']
         # num_samples = BATCH_SIZE
 
         ###########################
@@ -323,10 +329,10 @@ if __name__ == '__main__':
             # sample_params = session.run(fake_data)
 
             sample_params = []
-            for _ in range(num_test_samples // BATCH_SIZE + 1):
+            for _ in range(num_test_apd_samples // BATCH_SIZE + 1):
                 sample_params.append(session.run(fake_data))
             sample_params = np.concatenate(sample_params, 0)
-            sample_params = sample_params[:num_test_samples]
+            sample_params = sample_params[:num_test_apd_samples]
 
             sample_dics = utils.prepare_torch_dicts(sample_params, model)
             posterior_weights = [1 for _ in range(len(sample_dics))]
@@ -345,7 +351,7 @@ if __name__ == '__main__':
         for i in range(num_test_runs):
             print("True Samples | Test run {}".format(i))
 
-            sample_dics_real = utils.load_posterior_state_dicts(src_dir=src_dir, example_model=model, num_samples=num_test_samples)
+            sample_dics_real = utils.load_posterior_state_dicts(src_dir=src_dir, example_model=model, num_samples=num_test_sgld_samples)
 
             posterior_weights = [1 for _ in range(len(sample_dics_real))]
             model.posterior_samples = sample_dics_real  # Should change this structure
@@ -362,6 +368,9 @@ if __name__ == '__main__':
         ##############################
         ### Test Anomaly detection ###
         ##############################
+
+        apd_anom_detection_results = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        sgld_anom_detection_results = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))  # { 5: 'f_entropy': [(87, 0.1), (89, 0.2), (91, 0.1)]}
 
         for scale in opt_config['test_ood_scales']:
             model.eval()  # Just to make sure model is in eval mode
@@ -400,10 +409,10 @@ if __name__ == '__main__':
                         # print("Test run {}".format(i))
 
                         sample_params = []
-                        for _ in range(num_test_samples // BATCH_SIZE + 1):
+                        for _ in range(num_test_apd_samples // BATCH_SIZE + 1):
                             sample_params.append(session.run(fake_data))
                         sample_params = np.concatenate(sample_params, 0)
-                        sample_params = sample_params[:num_test_samples]
+                        sample_params = sample_params[:num_test_apd_samples]
 
                         sample_dics = utils.prepare_torch_dicts(sample_params, model)
                         posterior_weights = [1 for _ in range(len(sample_dics))]
@@ -436,6 +445,10 @@ if __name__ == '__main__':
                           np.mean(n_aupr_list), np.std(n_aupr_list),
                           np.mean(ab_aupr_list), np.std(ab_aupr_list)))
 
+                    apd_anom_detection_results[scale][ood_dataset_name][func_name] = [(np.mean(auroc_list), np.std(auroc_list)),
+                                                                                      (np.mean(n_aupr_list), np.std(n_aupr_list)),
+                                                                                      (np.mean(ab_aupr_list), np.std(ab_aupr_list))]
+
 
             print
             print("Real OOD Results")
@@ -455,7 +468,7 @@ if __name__ == '__main__':
 
                     for i in range(num_test_runs):
                         # print("Test run {}".format(i))
-                        posterior_samples = utils.load_posterior_state_dicts(src_dir=src_dir, example_model=model, num_samples=num_test_samples)
+                        posterior_samples = utils.load_posterior_state_dicts(src_dir=src_dir, example_model=model, num_samples=num_test_sgld_samples)
                         posterior_weights = [1 for _ in range(len(posterior_samples))]
                         model.posterior_samples = posterior_samples  # Should change this structure
                         model.posterior_weights = posterior_weights
@@ -484,3 +497,28 @@ if __name__ == '__main__':
                           np.mean(auroc_list), np.std(auroc_list),
                           np.mean(n_aupr_list), np.std(n_aupr_list),
                           np.mean(ab_aupr_list), np.std(ab_aupr_list)))
+
+                    sgld_anom_detection_results[scale][ood_dataset_name][func_name] = [(np.mean(auroc_list), np.std(auroc_list)),
+                                                                                       (np.mean(n_aupr_list), np.std(n_aupr_list)),
+                                                                                       (np.mean(ab_aupr_list), np.std(ab_aupr_list))]
+
+        for scale in opt_config['test_ood_scales']:
+            for ood_dataset_name in opt_config['ood_datasets']:
+                apd_anom_detection_results[scale][ood_dataset_name] = dict(apd_anom_detection_results[scale][ood_dataset_name])
+                sgld_anom_detection_results[scale][ood_dataset_name] = dict(sgld_anom_detection_results[scale][ood_dataset_name])
+            apd_anom_detection_results[scale] = dict(apd_anom_detection_results[scale])
+            sgld_anom_detection_results[scale] = dict(sgld_anom_detection_results[scale])
+
+        apd_anom_detection_results = dict(apd_anom_detection_results)
+        sgld_anom_detection_results = dict(sgld_anom_detection_results)
+
+        with open(os.path.join('./gan_exps', exp_dir, 'apd_anom_res_g:{}_s:{}'.format(opt_config['gan_dim'],
+                                                                                      opt_config['num_test_apd_samples'])), 'wb') as f:
+            pkl.dump(apd_anom_detection_results, f)
+
+        with open(os.path.join('./gan_exps', exp_dir, 'sgld_anom_res_s:{}'.format(opt_config['num_test_sgld_samples'])), 'wb') as f:
+            pkl.dump(sgld_anom_detection_results, f)
+
+        print('-' * 89)
+        print('Experiment directory: {}'.format(os.path.join('gan_exps', exp_dir)))
+        print('-' * 89)
