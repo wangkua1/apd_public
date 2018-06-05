@@ -28,6 +28,6 @@ num_test_runs: 10
 num_test_samples: 200
 
 ood_datasets: ['notMNIST', 'omniglot', 'cifar10bw', 'gaussian', 'uniform']
-test_ood_scales: [1, 5, 10]
-# ood_acq_funcs: ['f_bald', 'f_entropy', 'f_maxy']
-ood_acq_funcs: ['f_maxy']
+test_ood_scales: [1, 5, 10, 20]
+ood_acq_funcs: ['f_bald', 'f_entropy', 'f_maxy']
+# ood_acq_funcs: ['f_maxy']
