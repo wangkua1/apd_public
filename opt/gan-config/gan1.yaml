@@ -1,6 +1,7 @@
 task: 'mnist'
 mode: 'wgan-gp'
-n_train: 5000
+n_train: 10000
+# n_train: 5000
 # n_train: 1000
 
 batch_size: 100  # Batch size  (what's the diff between batch size and sample_size??)
@@ -23,8 +24,9 @@ iters: 100000  # How many generator iterations to train for
 critic_iters: 5 # How many critic iterations per generator iteration
 
 num_test_runs: 10
-num_test_samples: 200  # How many samples to generate or true samples to load for test evaluation
+num_test_apd_samples: 100  # How many samples to generate for test evaluation
+num_test_sgld_samples: 100  # How many true samples to load for test evaluation
 
 ood_datasets: ['notMNIST', 'omniglot', 'cifar10bw', 'gaussian', 'uniform']
+test_ood_scales: [1, 5, 10, 20]
 ood_acq_funcs: ['f_bald', 'f_entropy', 'f_maxy']
-test_ood_scales: [1, 5, 10]
