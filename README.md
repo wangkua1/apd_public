@@ -1,6 +1,6 @@
 # Adversarial Posterior Distillation (APD)
 
-This repository contains the code used for the paper _Distilling the Posterior in Bayesian Neural Networks (ICML 2018)_.
+This repository contains the code used for the paper [Adversarial Distillation of Bayesian Neural Network Posteriors (ICML 2018)](https://arxiv.org/pdf/1806.10317.pdf).
 
 ## Requirements
 
@@ -158,4 +158,18 @@ python adv_eval_new.py --gan fc1-mnist-100-X-sgld-mnist-1-1-X-mnist-50000@DATE g
 
 ```
 python adv_eval_new.py --sgld fc1-mnist-100-X-sgld-mnist-1-1-X-mnist-50000@DATE fgsm 1000 --atk_source=fc1-mnist-100-drop-50-X-sgd-mnist-X-mnist-50000@DATE --cuda
+```
+
+
+## Citation
+
+If you use this code, please cite:
+
+```
+@inproceedings{wangAPD2018,
+  title={Adversarial Distillation of Bayesian Neural Network Posteriors},
+  author={Kuan-Chieh Wang and Paul Vicol and James Lucas and Li Gu and Roger Grosse and Richard Zemel},
+  booktitle={{International Conference on Machine Learning (ICML)}},
+  year={2018}
+}
 ```
