@@ -4,15 +4,15 @@ n_train: 10000
 # n_train: 5000
 # n_train: 1000
 
-batch_size: 100  # Batch size  (what's the diff between batch size and sample_size??)
+batch_size: 100  # Batch size
 test_input_batch_size: 500
 
 ood_scale: 5
 n_anom: 2000
 
-sample_size: 1000  # Not used right now
-validation_interval: 2000
-# validation_interval: 50
+sample_size: 1000
+# validation_interval: 2000
+validation_interval: 50
 
 gan_layers: 3
 gan_dim: 100  # The size of the hidden state in the generator and discriminator
@@ -30,3 +30,5 @@ num_test_sgld_samples: 100  # How many true samples to load for test evaluation
 ood_datasets: ['notMNIST', 'omniglot', 'cifar10bw', 'gaussian', 'uniform']
 test_ood_scales: [1, 5, 10, 20]
 ood_acq_funcs: ['f_bald', 'f_entropy', 'f_maxy']
+
+exp_dir_prefix: ''

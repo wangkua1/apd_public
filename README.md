@@ -72,7 +72,7 @@ python train_new.py model/config/fc-mnist-400.yaml opt/config/sgld-mnist-1-1.yam
 
 **APD**
 ```
-python gan.py CE.fc-mnist-400-X-sgld-mnist-1-X-mnist-50000@DATE opt/gan-config/gan1.yaml
+python gan.py fc-mnist-400-X-sgld-mnist-1-1-X-mnist-50000@DATE opt/gan-config/gan1.yaml
 ```
 
 

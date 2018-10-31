@@ -13,11 +13,7 @@ Options:
 Arguments:
 
 Example:
-    Jan05,2018
-    python train_new.py model/config/fc1-100.yaml opt/config/sgld-baby.yaml babymnist-1000 --cuda --apd_gan opt/gan-config/babymnist-wgan-gp.yaml --apd opt/apd-config/vanilla_apd.yaml
-    python train_new.py model/config/fc1-mnist-100.yaml opt/config/sgld-mnist-1.yaml mnist-50000 --cuda
-
-    python train_new.py model/config/cnn-globe.yaml opt/config/sgld-mnist-1.yaml mnist-50000 --cuda
+    python train_new.py model/config/fc1-mnist-100.yaml opt/config/sgld-mnist-1-1.yaml mnist-50000 --cuda
 """
 import matplotlib as mtl
 mtl.use('Agg')
